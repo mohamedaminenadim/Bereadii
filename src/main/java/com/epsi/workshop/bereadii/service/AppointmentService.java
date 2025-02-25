@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Service
@@ -24,8 +25,12 @@ public class AppointmentService {
         return appointmentRepository.findAll();
     }
 
+    public AppointmentEntity getAppointmentById(String id) {
+        return appointmentRepository.findById(id).orElseThrow(NoSuchElementException::new);
+    }
+
     public List<AppointmentEntity> getAppointmentsByClientFullName(String clientFirstName, String clientFamilyName) {
-        UserEntity user = userController.getUserByFullName(clientFirstName, clientFamilyName);
+        UserEntity user = userController.getUserByFullName(clientFirstName, clientFamilyName).getBody();
         String id = user.getId();
         return appointmentRepository.findByClientId(id);
     }
@@ -44,11 +49,11 @@ public class AppointmentService {
             existingAppointment.setServices(updatedAppointment.getServices());
             return appointmentRepository.save(existingAppointment);
         }
-        throw new RuntimeException("Appointment not found");
+        throw new NoSuchElementException("Appointment not found");
     }
 
     public AppointmentEntity deleteAppointment(String id) {
-        AppointmentEntity appointmentEntity = appointmentRepository.findById(id).get();
+        AppointmentEntity appointmentEntity = this.getAppointmentById(id);
         appointmentRepository.deleteById(id);
         return appointmentEntity;
     }

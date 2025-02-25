@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Service
@@ -15,6 +16,10 @@ public class UserService {
 
     public List<UserEntity> getAllUsers() {
         return userRepository.findAll();
+    }
+
+    public UserEntity getUserById(String id) {
+        return userRepository.findById(id).orElseThrow(NoSuchElementException::new);
     }
 
     public UserEntity getUserByFullName(String firstName, String lastName) {
@@ -35,10 +40,12 @@ public class UserService {
             existingUser.setPhoneNumber(updatedUser.getPhoneNumber());
             return userRepository.save(existingUser);
         }
-        throw new RuntimeException("User not found, check if id exists");
+        throw new NoSuchElementException("User not found, check if id exists");
     }
 
-    public void deleteUser(String id) {
+    public UserEntity deleteUser(String id) {
+        UserEntity existingUser = userRepository.findById(id).orElseThrow(NoSuchElementException::new);
         userRepository.deleteById(id);
+        return existingUser;
     }
 }
