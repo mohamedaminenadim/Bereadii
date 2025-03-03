@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -26,11 +27,11 @@ public class AppointmentService {
     }
 
     public AppointmentEntity getAppointmentById(String id) {
-        return appointmentRepository.findById(id).orElseThrow(NoSuchElementException::new);
+        return appointmentRepository.findById(UUID.fromString(id)).orElseThrow();
     }
 
     public List<AppointmentEntity> getAppointmentsByClientFullName(String clientFirstName, String clientFamilyName) {
-        UserEntity user = userController.getUserByFullName(clientFirstName, clientFamilyName).getBody();
+        UserEntity user = userController.getUserByFullName(clientFirstName, clientFamilyName);
         String id = user.getId();
         return appointmentRepository.findByClientId(id);
     }
@@ -40,9 +41,9 @@ public class AppointmentService {
     }
 
     public AppointmentEntity updateAppointment(String id, AppointmentEntity updatedAppointment) {
-        Optional<AppointmentEntity> appointmentOpt = appointmentRepository.findById(id);
-        if (appointmentOpt.isPresent()) {
-            AppointmentEntity existingAppointment = appointmentOpt.get();
+         var isPresent = appointmentRepository.findById(UUID.fromString(id)).isPresent();
+        if (isPresent) {
+            AppointmentEntity existingAppointment = appointmentRepository.findById(UUID.fromString(id)).get();
             existingAppointment.setAppointmentDateTime(updatedAppointment.getAppointmentDateTime());
             existingAppointment.setClientId(updatedAppointment.getClientId());
             existingAppointment.setProfessionalId(updatedAppointment.getProfessionalId());
@@ -54,7 +55,7 @@ public class AppointmentService {
 
     public AppointmentEntity deleteAppointment(String id) {
         AppointmentEntity appointmentEntity = this.getAppointmentById(id);
-        appointmentRepository.deleteById(id);
+        appointmentRepository.deleteById(UUID.fromString(id));
         return appointmentEntity;
     }
 }

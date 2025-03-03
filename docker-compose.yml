@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  mongo:
+    image: mongo
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: bereadii
+    volumes:
+      - mongo_data:/data/db
+    restart: always
+
+  bereadii-app:
+    build: .
+    container_name: bereadii-app
+    ports:
+      - "8070:8070"
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/bereadii
+    depends_on:
+      - mongo
+    restart: always
+
+volumes:
+  mongo_data:

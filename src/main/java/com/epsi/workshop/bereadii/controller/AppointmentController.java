@@ -3,20 +3,21 @@ package com.epsi.workshop.bereadii.controller;
 import com.epsi.workshop.bereadii.entity.AppointmentEntity;
 import com.epsi.workshop.bereadii.service.AppointmentService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.coyote.BadRequestException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @RestController
 @RequestMapping("/api/appointment/")
 @Slf4j
 public class AppointmentController {
 
-    private static Logger LOGGER = LoggerFactory.getLogger(AppointmentController.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AppointmentController.class);
 
     @Autowired
     public AppointmentService appointmentService;
@@ -27,64 +28,58 @@ public class AppointmentController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<AppointmentEntity> getAppointmentById(@PathVariable String id) {
-        try {
-            AppointmentEntity appointmentEntity = appointmentService.getAppointmentById(id);
-            LOGGER.info("Found appointment with id " + id );
-            return ResponseEntity.status(200).body(appointmentEntity);
-        } catch (Exception exception) {
-            var message = String.format("An exception of type %s occured. Here is the cause :\n%s",exception.getClass(), exception.getMessage());
-            LOGGER.error(message);
+    public AppointmentEntity getAppointmentById(@PathVariable String id) {
+        if (appointmentService.getAppointmentById(id) != null){
+            LOGGER.info("Found appointment with id '{}'", id);
+            return appointmentService.getAppointmentById(id);
+        } else {
+            LOGGER.error("No element found with id '{}'", id);
+            return null;
         }
-        return ResponseEntity.status(400).build();
     }
 
     @GetMapping("/all/{firstName:familyName}")
-    public ResponseEntity<List<AppointmentEntity>> getAllAppointmentsByFullName(@PathVariable String firstName, @PathVariable String familyName) {
-        try {
-            List<AppointmentEntity> appointmentEntity = appointmentService.getAppointmentsByClientFullName(firstName, familyName);
-            return ResponseEntity.status(201).body(appointmentEntity);
-        } catch (Exception exception) {
-            var message = String.format("An exception of type %s occured. Here is the cause :\n%s",exception.getClass(), exception.getMessage());
-            LOGGER.error(message);
-        }
-        return ResponseEntity.status(400).build();
+    public List<AppointmentEntity> getAllAppointmentsByFullName(@PathVariable String firstName, @PathVariable String familyName) {
+        LOGGER.info("List of appointments booked by '{}' :\n", String.format("%s %s", firstName, familyName));
+        List<AppointmentEntity> appointmentEntities = appointmentService.getAppointmentsByClientFullName(firstName, familyName);
+        return appointmentEntities;
     }
 
     @PostMapping("/create")
-    public ResponseEntity<AppointmentEntity> createAppointment(@RequestBody AppointmentEntity appointment) {
+    public AppointmentEntity createAppointment(@RequestBody AppointmentEntity appointment) throws BadRequestException {
         try {
             AppointmentEntity appointmentEntity = appointmentService.createAppointment(appointment);
-            return ResponseEntity.status(201).body(appointmentEntity);
-        } catch (Exception exception) {
-            var message = String.format("An exception of type %s occured. Here is the cause :\n%s",exception.getClass(), exception.getMessage());
-            LOGGER.error(message);
+            String body = String.format("New appointment has been successfully created");
+            return appointmentEntity;
+        } catch (Exception e) {
+            LOGGER.error("Unable to create appointment");
+            throw new BadRequestException("Unable to create appointment");
         }
-        return ResponseEntity.status(400).build();
     }
 
     @PutMapping("/update/{id}")
-    public ResponseEntity<AppointmentEntity> updateAppointmentById(@PathVariable String id, @RequestBody AppointmentEntity updatedAppointment) {
+    public AppointmentEntity updateAppointmentById(@PathVariable String id, @RequestBody AppointmentEntity updatedAppointment) throws BadRequestException {
         try {
             AppointmentEntity appointmentEntity = appointmentService.updateAppointment(id, updatedAppointment);
-            return ResponseEntity.status(200).body(appointmentEntity);
-        } catch (Exception exception) {
-            var message = String.format("An exception of type %s occured. Here is the cause :\n%s",exception.getClass(), exception.getMessage());
-            LOGGER.error(message);
+            return appointmentEntity;
+        } catch (Exception e) {
+            LOGGER.error("Unable to update appointment");
+            throw new BadRequestException("Unable to update appointment");
         }
-        return ResponseEntity.status(400).build();
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<String> deleteAppointmentById(@PathVariable String id) {
+    public String deleteAppointmentById(@PathVariable String id) throws NoSuchElementException {
         try {
             AppointmentEntity entity = appointmentService.deleteAppointment(id);
             String body = String.format("Appointment with id '%s' has been successfully deleted\n", id);
-            return ResponseEntity.status(200).body(body + entity);
+            return body;
+        } catch (NoSuchElementException exception) {
+            LOGGER.error("Unable to delete appointment with id '{}'. Please verify that the appointment actually exists.", id);
+            throw new NoSuchElementException("Unable to delete appointment");
         } catch (Exception exception) {
-            var message = String.format("An exception of type %s occured. Here is the cause :\n%s",exception.getClass(), exception.getMessage());
-            LOGGER.error(message);
+            LOGGER.error("Internal server error.");
+            throw new RuntimeException(exception.getMessage());
         }
-        return ResponseEntity.status(400).build();
     }
 }

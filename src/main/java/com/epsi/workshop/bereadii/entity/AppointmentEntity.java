@@ -2,79 +2,37 @@ package com.epsi.workshop.bereadii.entity;
 
 import com.epsi.workshop.bereadii.utils.AppointmentStatus;
 import com.epsi.workshop.bereadii.utils.ProfessionalService;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.Setter;
+import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
+@NoArgsConstructor
+@AllArgsConstructor
+@RequiredArgsConstructor
 @Getter
 @Setter
 @Document(collection = "appointments")
 public class AppointmentEntity {
     @Id
-    private String id;
+    @Getter
+    private UUID id;
     @NonNull
-    private Long clientId;
+    public Long clientId;
     @NonNull
-    private Long professionalId;
-    private ProfessionalService services;
-    private LocalDateTime appointmentDateTime;
-    private AppointmentStatus status;
-    private LocalDateTime createdAt;
+    public Long professionalId;
+    public ProfessionalService services;
+    public LocalDateTime appointmentDateTime;
+    public AppointmentStatus status;
+    public LocalDateTime createdAt;
 
-    public String getId() {
-        return id;
+    public void setId(UUID id) {
+        if (this.id != null) {
+            throw new UnsupportedOperationException("ID is already defined");
+        }
+        this.id = id;
     }
 
-
-    public @NonNull Long getClientId() {
-        return clientId;
-    }
-
-    public void setClientId(@NonNull Long clientId) {
-        this.clientId = clientId;
-    }
-
-    public @NonNull Long getProfessionalId() {
-        return professionalId;
-    }
-
-    public void setProfessionalId(@NonNull Long professionalId) {
-        this.professionalId = professionalId;
-    }
-
-    public ProfessionalService getServices() {
-        return services;
-    }
-
-    public void setServices(ProfessionalService services) {
-        this.services = services;
-    }
-
-    public LocalDateTime getAppointmentDateTime() {
-        return appointmentDateTime;
-    }
-
-    public void setAppointmentDateTime(LocalDateTime appointmentDateTime) {
-        this.appointmentDateTime = appointmentDateTime;
-    }
-
-    public AppointmentStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(AppointmentStatus status) {
-        this.status = status;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
 }
